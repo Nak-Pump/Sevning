@@ -6,7 +6,7 @@ verify = false
 password = 'password'
 
 # ApiName - Run Command
-[Runtime]
+[Runtimes]
 python_weiban = "python main.py {1} {2} {3}"
 
 # Token - Money

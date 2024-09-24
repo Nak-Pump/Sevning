@@ -1,6 +1,6 @@
 # Application Config
 [application]
-ip = '0.0.0.0'
+ip = 'localhost'
 port = '8080'
 verify = false
 password = 'password'

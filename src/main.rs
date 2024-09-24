@@ -1,11 +1,7 @@
 use salvo::prelude::TcpListener;
 use salvo::{handler, Listener, Router, Server};
 use Sevning::config;
-
-#[handler]
-async fn hello() -> &'static str {
-    "Hello World"
-}
+use Sevning::handle::{hello_handler, sevning_handler};
 
 #[tokio::main]
 async fn main() {
@@ -17,9 +13,9 @@ async fn main() {
     let port = config.config.application.port.parse::<u16>().unwrap();
 
 
-    let router = Router::new()
-        .path("").get(hello);
-
+    let mut router = Router::new()
+        .push(Router::new().path("").get(hello_handler))
+        .push(Router::new().path("sevning").get(sevning_handler));
 
     let acceptor = TcpListener::new(
         (ip, port)).

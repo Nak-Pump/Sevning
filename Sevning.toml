@@ -1,14 +1,14 @@
 # Application Config
-[Application]
+[application]
 ip = '0.0.0.0'
 port = '8080'
 verify = false
 password = 'password'
 
 # ApiName - Run Command
-[Runtimes]
+[runtimes]
 python_weiban = "python main.py {1} {2} {3}"
 
 # Token - Money
-[Users]
+[users]
 Coaixy_10086 = "100"

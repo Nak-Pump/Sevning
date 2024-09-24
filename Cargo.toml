@@ -13,3 +13,4 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 time = "0.3.36"
 futures-util = "0.3.30"
+uuid = { version = "1.10.0", features = ["v4"] }

@@ -34,8 +34,24 @@ async fn send_sse_message_demo(tx: mpsc::UnboundedSender<&str>) {
     }
 }
 
+fn parse_command_args(command_args: String) -> Vec<String> {
+    let mut command_args_vec: Vec<String> = Vec::new();
+    let mut command_args_split = command_args.split(" ");
+    for arg in command_args_split {
+        command_args_vec.push(arg.to_string());
+    }
+    command_args_vec
+}
+
+
 #[handler]
 pub async fn sevning_handler(req: &mut Request, res: &mut Response) {
+    let mut token = req.query("token").unwrap_or("default").to_string();
+    let mut command_name = req.query("command_name").unwrap_or("default").to_string();
+    let mut command_args = req.query("command_args").unwrap_or("default").to_string();
+
+    let mut command_args_vec = parse_command_args(command_args);
+
     let (tx, rx) = mpsc::unbounded_channel();
     let rx = UnboundedReceiverStream::new(rx);
 

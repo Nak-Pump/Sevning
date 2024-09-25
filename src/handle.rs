@@ -44,6 +44,18 @@ fn parse_command_args(command_args: String) -> Vec<String> {
 }
 
 
+fn generate_true_command(command_name: String, command_args: Vec<String>) -> String {
+    let mut config = config::SConfig::new();
+    config.init();
+    let command_map = &config.config.runtimes.command_map;
+    let mut command_line = command_map.get(&command_name).unwrap().to_string();
+    for i in 1..command_args.len() + 1 {
+        command_line = command_line.replace(&format!("{{{}}}", i), &command_args[i-1]);
+    }
+    command_line
+}
+
+
 #[handler]
 pub async fn sevning_handler(req: &mut Request, res: &mut Response) {
     let mut token = req.query("token").unwrap_or("default").to_string();

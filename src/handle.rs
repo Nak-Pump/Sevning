@@ -6,7 +6,7 @@ use salvo::sse::{self, SseEvent};
 use tokio::sync::mpsc;
 use tokio::time::interval;
 use tokio_stream::wrappers::{IntervalStream, UnboundedReceiverStream};
-
+use crate::config;
 /***
     * This is a simple handler that returns a string "Hello World"
  */
@@ -71,4 +71,15 @@ pub async fn sevning_handler(req: &mut Request, res: &mut Response) {
 
     let stream = rx.map(|msg| sse_text(msg));
     SseKeepAlive::new(stream).stream(res);
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn generate_true_command() {
+        let command_name = "echo".to_string();
+        let command_args = vec!["Hello".to_string(), "World".to_string()];
+        let true_command = super::generate_true_command(command_name, command_args);
+        assert_eq!(true_command, "echo Hello World");
+    }
 }

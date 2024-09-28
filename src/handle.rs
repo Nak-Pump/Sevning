@@ -40,7 +40,7 @@ async fn sse_message(tx: mpsc::UnboundedSender<String>, commander: Arc<RwLock<Co
 
     while let Some(_) = send_interval.next().await {
         if let Some(message) = output_rx.recv().await {
-            if message == "state_exit" { break }
+            if message == "state_exit" { break; }
             let result = tx.send(message);
             if result.is_err() {
                 break;
@@ -111,6 +111,10 @@ pub async fn sevning_handler(req: &mut Request, res: &mut Response) {
     }
 
     let command_args_vec = parse_command_args(command_args);
+    let true_command = generate_true_command(command_name.clone(), command_args_vec.clone());
+    let args_command = true_command.replace(format!("{} ", command_name).as_str(), "");
+    let command_args_vec = parse_command_args(args_command);
+
 
     let (tx, rx) = mpsc::unbounded_channel::<String>();
     let rx = UnboundedReceiverStream::new(rx);
@@ -128,9 +132,9 @@ pub async fn sevning_handler(req: &mut Request, res: &mut Response) {
 mod test {
     #[test]
     fn generate_true_command() {
-        let command_name = "echo".to_string();
-        let command_args = vec!["Hello".to_string()];
+        let command_name = "ping".to_string();
+        let command_args = vec!["127.0.0.1".to_string()];
         let true_command = super::generate_true_command(command_name, command_args);
-        assert_eq!(true_command, "echo Hello");
+        assert_eq!(true_command, "ping 127.0.0.1 -c 4");
     }
 }

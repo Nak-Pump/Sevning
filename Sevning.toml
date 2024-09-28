@@ -7,7 +7,7 @@ password = 'password'
 
 # ApiName - Run Command
 [runtimes]
-python_weiban = "python main.py {参数1} {参数2} {参数3}"
+ping = "ping {ip} -c 4"
 echo = "echo {内容}"
 
 # Token - Money

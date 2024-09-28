@@ -13,7 +13,7 @@ async fn main() {
     let port = config.config.application.port.parse::<u16>().unwrap();
 
 
-    let mut router = Router::new()
+    let router = Router::new()
         .push(Router::new().path("").get(hello_handler))
         .push(Router::new().path("sevning").get(sevning_handler));
 

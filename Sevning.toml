@@ -7,8 +7,8 @@ password = 'password'
 
 # ApiName - Run Command
 [runtimes]
-python_weiban = "python main.py {1} {2} {3}"
-echo = "echo {1} {2}"
+python_weiban = "python main.py {参数1} {参数2} {参数3}"
+echo = "echo {内容}"
 
 # Token - Money
 [users]

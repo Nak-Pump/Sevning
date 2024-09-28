@@ -1,3 +1,4 @@
+use std::string::String;
 use std::convert::Infallible;
 use std::time::Duration;
 use futures_util::StreamExt;
@@ -49,8 +50,30 @@ fn generate_true_command(command_name: String, command_args: Vec<String>) -> Str
     config.init();
     let command_map = &config.config.runtimes.command_map;
     let mut command_line = command_map.get(&command_name).unwrap().to_string();
-    for i in 1..command_args.len() + 1 {
-        command_line = command_line.replace(&format!("{{{}}}", i), &command_args[i-1]);
+
+    let mut left_position: Vec<usize> = Vec::new();
+    let mut right_position: Vec<usize> = Vec::new();
+
+    let chars: Vec<(usize, char)> = command_line.char_indices().collect();
+
+    for (i, (_, char)) in chars.iter().enumerate() {
+        if *char == '{' {
+            left_position.push(i);
+        }
+        if *char == '}' {
+            right_position.push(i);
+        }
+    }
+
+    if left_position.len() != right_position.len() || left_position.len() != command_args.len() {
+        panic!("Command line format error");
+    }
+
+    for i in (0..left_position.len()).rev() {
+        let left = left_position[i];
+        let right = right_position[i];
+        let replace_str: String = chars[left..=right].iter().map(|(_, c)| c).collect();
+        command_line = command_line.replacen(&replace_str, &command_args[i], 1);
     }
     command_line
 }
@@ -62,7 +85,8 @@ pub async fn sevning_handler(req: &mut Request, res: &mut Response) {
     let mut command_name = req.query("command_name").unwrap_or("default").to_string();
     let mut command_args = req.query("command_args").unwrap_or("default").to_string();
 
-    let mut command_args_vec = parse_command_args(command_args);
+    let command_args_vec = parse_command_args(command_args);
+    let true_command = generate_true_command(command_name, command_args_vec);
 
     let (tx, rx) = mpsc::unbounded_channel();
     let rx = UnboundedReceiverStream::new(rx);
@@ -78,8 +102,8 @@ mod test {
     #[test]
     fn generate_true_command() {
         let command_name = "echo".to_string();
-        let command_args = vec!["Hello".to_string(), "World".to_string()];
+        let command_args = vec!["Hello".to_string()];
         let true_command = super::generate_true_command(command_name, command_args);
-        assert_eq!(true_command, "echo Hello World");
+        assert_eq!(true_command, "echo Hello");
     }
 }

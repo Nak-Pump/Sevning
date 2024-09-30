@@ -16,7 +16,7 @@ impl CommandManager {
     }
 
     pub async fn add_command(&mut self, command: Arc<RwLock<Commander>>) {
-        self.command_map.insert(command.read().await.uuid.clone(), command);
+        self.command_map.insert(command.read().await.uuid.clone(), command.clone());
     }
 
     pub fn remove_command(&mut self, uuid: String) {

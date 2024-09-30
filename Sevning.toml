@@ -2,7 +2,7 @@
 [application]
 ip = 'localhost'
 port = '8080'
-verify = false
+verify = true
 password = 'password'
 
 # ApiName - Run Command

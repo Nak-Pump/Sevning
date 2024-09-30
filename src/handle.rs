@@ -13,6 +13,7 @@ use tokio::time::interval;
 use tokio_stream::wrappers::{IntervalStream, UnboundedReceiverStream};
 use crate::commander::Commander;
 use crate::config;
+use crate::singleton::COMMAND_MANAGER;
 /***
     * This is a simple handler that returns a string "Hello World"
  */
@@ -29,17 +30,17 @@ fn sse_text(text: String) -> Result<SseEvent, Infallible> {
 
 async fn sse_message(tx: mpsc::UnboundedSender<String>, commander: Arc<RwLock<Commander>>) {
     let (output_tx, mut output_rx) = mpsc::channel(1000);
-
+    // Create a new command
     let commander_clone = commander.clone();
     tokio::spawn(async move {
         let mut cmd = commander_clone.write().await;
         cmd.create_new_command(output_tx).await
     });
-
+    // read output and send to client
     let mut send_interval = IntervalStream::new(interval(Duration::from_millis(1000)));
-
     while let Some(_) = send_interval.next().await {
         if let Some(message) = output_rx.recv().await {
+            // if message is state_exit, break the loop
             if message == "state_exit" { break; }
             let result = tx.send(message);
             if result.is_err() {
@@ -92,15 +93,15 @@ fn generate_true_command(command_name: String, command_args: Vec<String>) -> Str
     command_line
 }
 
-
+// This handler is used to execute a command and send the output to the client
 #[handler]
 pub async fn sevning_handler(req: &mut Request, res: &mut Response) {
+    // Set Headers
     res.headers_mut()
         .insert(CONTENT_TYPE, HeaderValue::from_static("text/event-stream; charset=utf-8"));
-    // Disable response body caching
     res.headers_mut()
         .insert(CACHE_CONTROL, HeaderValue::from_static("no-cache"));
-
+    // get params
     let token = req.query("token").unwrap_or("default").to_string();
     let command_name = req.query("command_name").unwrap_or("default").to_string();
     let command_args = req.query("command_args").unwrap_or("default").to_string();
@@ -110,21 +111,24 @@ pub async fn sevning_handler(req: &mut Request, res: &mut Response) {
         return;
     }
 
+    // parse command name and command args
     let command_args_vec = parse_command_args(command_args);
     let true_command = generate_true_command(command_name.clone(), command_args_vec.clone());
     let args_command = true_command.replace(format!("{} ", command_name).as_str(), "");
     let command_args_vec = parse_command_args(args_command);
 
-
+    // generate channel to send message
     let (tx, rx) = mpsc::unbounded_channel::<String>();
     let rx = UnboundedReceiverStream::new(rx);
-    let commander = Arc::new(RwLock::new(Commander::new(token, command_name, command_args_vec)));
+    let commander = Arc::new(RwLock::new(Commander::new(token.clone(), command_name, command_args_vec)));
+
+    COMMAND_MANAGER.lock().await.add_command(commander.clone()).await;
+    // create task
     tokio::spawn(async move {
         sse_message(tx, commander.clone()).await;
     });
-
+    // SSE
     let stream = rx.map(|msg| sse_text(msg));
-
     SseKeepAlive::new(stream).stream(res);
 }
 

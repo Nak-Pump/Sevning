@@ -22,7 +22,6 @@ pub async fn hello_handler() -> &'static str {
     "Hello World"
 }
 
-
 fn sse_text(text: String) -> Result<SseEvent, Infallible> {
     Ok(SseEvent::default().text(text))
 }

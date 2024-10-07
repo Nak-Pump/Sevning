@@ -5,7 +5,7 @@ use tokio::sync::{Mutex, RwLock};
 use crate::commander::Commander;
 
 pub struct CommandManager {
-    command_map: HashMap<String, Arc<RwLock<Commander>>>,
+    pub(crate) command_map: HashMap<String, Arc<RwLock<Commander>>>,
 }
 
 impl CommandManager {
@@ -14,7 +14,12 @@ impl CommandManager {
             command_map: HashMap::new(),
         }
     }
-
+    pub async fn set_statue(&mut self, uuid: String, status: i32) {
+        if let Some(command) = self.command_map.get(&uuid) {
+            let mut command = command.write().await;
+            command.status = status;
+        }
+    }
     pub async fn add_command(&mut self, command: Arc<RwLock<Commander>>) {
         self.command_map.insert(command.read().await.uuid.clone(), command.clone());
     }
